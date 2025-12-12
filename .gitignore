@@ -1,1 +1,19 @@
-1
+# Dependencies
+/node_modules
+
+# Environment Variables and Credentials
+# THIS IS THE MOST IMPORTANT LINE FOR SECURITY
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/logs
+
+# IDE/Editor Files (common temporary files)
+.vscode/
+.idea/
+*.swp
+*~
