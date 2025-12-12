@@ -1,4 +1,4 @@
-// src/routes/payments.js
+9// src/routes/payments.js
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
@@ -46,3 +46,41 @@ router.post('/stkpush', async (req, res) => {
         res.status(500).json({ error: 'Failed to process payment request.' });
     }
 });
+// src/routes/payments.js (continued)
+
+router.post('/callback', (req, res) => {
+    const callbackData = req.body.Body.stkCallback;
+    
+    // Log the full data for debugging
+    console.log('M-Pesa Callback Received:', JSON.stringify(callbackData, null, 2));
+
+    // 1. Check the Result Code
+    const resultCode = callbackData.ResultCode;
+
+    if (resultCode === 0) { // Success
+        
+        const metadata = callbackData.CallbackMetadata.Item;
+        
+        // Extract the key transaction details
+        const receiptNumber = metadata.find(item => item.Name === 'MpesaReceiptNumber')?.Value;
+        const amount = metadata.find(item => item.Name === 'Amount')?.Value;
+        const phoneNumber = metadata.find(item => item.Name === 'PhoneNumber')?.Value;
+        
+        // 2. Update Database (YOUR CRITICAL STEP)
+        // You would use the receiptNumber/CheckoutRequestID to find the pending 
+        // transaction in your database and update its status to 'COMPLETED'.
+        console.log(`SUCCESS: Transaction ${receiptNumber} for ${amount} from ${phoneNumber} completed.`);
+        
+    } else { // Failure (e.g., user cancelled, insufficient funds, wrong PIN)
+        const resultDesc = callbackData.ResultDesc;
+        console.log(`FAILED: ${resultDesc}`);
+
+        // 3. Update Database (Update status to 'FAILED')
+    }
+
+    // IMPORTANT: Send a 200 OK response back to M-Pesa immediately
+    // If you don't, M-Pesa might keep retrying the callback.
+    res.status(200).send('Callback received successfully.');
+});
+
+module.exports = router;
